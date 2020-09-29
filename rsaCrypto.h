@@ -2,6 +2,7 @@
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <vector>
 
 using namespace std;
 
@@ -27,12 +28,10 @@ class rsaCrypto
         BIGNUM  *e;
         BIGNUM  *d;
         BIGNUM  *phi;
-        BIGNUM gcd(BIGNUM a, BIGNUM b);
         void FindD();
-        BIGNUM findD();
-        BIGNUM extGCD(BIGNUM a, BIGNUM b, BIGNUM n);
-        BIGNUM* extEuclid(BIGNUM a, BIGNUM b);
-        BIGNUM modExponent(BIGNUM base, BIGNUM exponent, BIGNUM mod);
+        BIGNUM* extGCD(BIGNUM *a, BIGNUM *b, BIGNUM *n);
+        vector<BIGNUM*> extEuclid(BIGNUM *a, BIGNUM *b);
+        BIGNUM* modExponent(BIGNUM *base, BIGNUM *exponent, BIGNUM *mod);
         void rsaCrypto::PrintBN(BIGNUM *val, string text)
 
 };

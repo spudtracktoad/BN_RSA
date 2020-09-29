@@ -32,7 +32,10 @@ rsaCrypto::rsaCrypto(BIGNUM *primeOne, BIGNUM *primeTwo)
 
     //phi relatively prime to 3
     BN_gcd(p1, e, phi, ctx);
-    BN_
+    if(1 != BN_is_one(p1))
+    {
+        cout <<"error: " << e << " is not realitivly prime to " << phi << "!!" << endl;
+    }
 
     this->d = this->extGCD(this->e, 1, this->phi);
 }
@@ -138,7 +141,7 @@ BIGNUM rsaCrypto::decrypt(BIGNUM i)
     return modExponent(i, this->d, this->n);
 }
 
-BIGNUM rsaCrypto::modExponent(BIGNUM base, BIGNUM exponent, BIGNUM mod)
+BIGNUM rsaCrypto::modExponent(BIGNUM *base, BIGNUM *exponent, BIGNUM *mod)
 {
     BIGNUM result = 1;
     while (exponent > 0)
@@ -151,62 +154,54 @@ BIGNUM rsaCrypto::modExponent(BIGNUM base, BIGNUM exponent, BIGNUM mod)
     return result;
 }
 
-BIGNUM rsaCrypto::gcd(BIGNUM a, BIGNUM b)
+BIGNUM* rsaCrypto::extGCD(BIGNUM *a, BIGNUM *b, BIGNUM *n)
 {
-    if (b == 0)
-    {
-        return a;
-    }
-   else
-   {
-       return gcd(b, a % b);
-   }
-   return -1;
-}
+    BIGNUM *tmp = BN_new();
 
-void rsaCrypto::FindE()
-{
-    this->e = 2;
-    while(this->e < this->phi)
-    {
-       if(gcd(this->e, this->phi)==1)
-          break;
-       else
-          this->e++;
-    }
-}
+    vector<BIGNUM*> result;
+    result.push_back(BN_new());
+    result.push_back(BN_new());
+    result.push_back(BN_new());
 
-void rsaCrypto::FindD()
-{
-    BIGNUM tmpD = 1;
-    while(tmpD % this->e > 0)
-        tmpD += this->phi;
-    this->d = tmpD / this->e;
-}
-
-BIGNUM rsaCrypto::extGCD(BIGNUM a, BIGNUM b, BIGNUM n)
-{
-    BIGNUM* result;
-    BIGNUM x0 = -1;
+    BIGNUM *x0 = BN_new(); //-1;
+    BN_set_negative(x0, -1);
     result = extEuclid(a, n);
     //cout << result[0] << " " << result[1] << " " << result[2] << endl;
-    if(b%result[0] == 0)
+    BN_mod(tmp, b, result[0], ctx);
+    if(BN_is_zero(tmp) == 1)
     {
-        x0 = ((result[1] * (b / result[0]) % n ) + n) % n;
+        //b / result[0]
+        BN_div(tmp, x0, b, result[0], ctx);
+        //b / result[0]) % n 
+        BN_mod(tmp, tmp, n, ctx);
+        //(result[1] * (b / result[0]) % n )
+        BN_mul(tmp, tmp, result[1], ctx);
+        
+        //x0 = ((result[1] * (b / result[0]) % n ) + n) % n;
+        x0 = tmp;
     }
     return x0;
 }
 
-BIGNUM* rsaCrypto::extEuclid(BIGNUM a, BIGNUM b)
+vector<BIGNUM*> rsaCrypto::extEuclid(BIGNUM *a, BIGNUM *b)
 {
-    static BIGNUM result[3];
-    BIGNUM *internal;
-    BIGNUM tmp[3];
-    if(b == 0)
+    static vector<BIGNUM*> result;
+    result.push_back(BN_new());
+    result.push_back(BN_new());
+    result.push_back(BN_new());
+    vector<BIGNUM*> internal;
+    internal.push_back(BN_new());
+    internal.push_back(BN_new());
+    internal.push_back(BN_new());
+    vector<BIGNUM*> tmp;
+    tmp.push_back(BN_new());
+    tmp.push_back(BN_new());
+    tmp.push_back(BN_new());
+    if(BN_is_zero(b) == 1)
     {
         result[0] = a;
-        result[1] = 1;
-        result[2] = 0;
+        BN_one(result[1]);
+        BN_zero(result[2]);
     //cout << a << " " << b << " " << 0 << " " << result[0] << " " << result[1] << " " << result[2] << endl;
         return result;
     }
