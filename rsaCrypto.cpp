@@ -16,14 +16,11 @@ rsaCrypto::rsaCrypto()
     n = BN_new();
     e = BN_new();// 65537;
 
-    BN_set_bit(one, 0);
-    BN_set_bit(e, 0);
-    BN_set_bit(e, 16);
+    BN_one(one);
+    BN_set_word(e, (unsigned long) 65537);
 
     BN_hex2bn(&p, pChar);
     BN_hex2bn(&q, qChar);
-    PrintBN(p, "p");
-    PrintBN(q, "q");
     //n = p*q;
     if(0 == BN_mul(n, p, q, ctx))
     {
@@ -31,7 +28,6 @@ rsaCrypto::rsaCrypto()
         ERR_print_errors_fp(stdout);
         cout << endl;
     }
-    PrintBN(n, "n");
 
     //phi = (p-1)(q-1)
     BN_sub(p1, p, one);
@@ -57,17 +53,11 @@ rsaCrypto::rsaCrypto()
 void rsaCrypto::PrintState()
 {
     PrintBN(p, "p");
-    cout << endl;
     PrintBN(q, "q");
-    cout << endl;
     PrintBN(n, "n");
-    cout << endl;
     PrintBN(phi, "phi");
-    cout << endl;
     PrintBN(e, "e");
-    cout << endl;
     PrintBN(d, "d");
-    cout << endl;
 
 }
 rsaCrypto::~rsaCrypto()
@@ -197,21 +187,11 @@ BIGNUM* rsaCrypto::modExponent(BIGNUM *b, BIGNUM *exp, BIGNUM *mod)
 
 BIGNUM* rsaCrypto::extGCD(BIGNUM *a, BIGNUM *b, BIGNUM *x, BIGNUM *y)
 {
-    cout << "extGCD" << endl;
-        PrintBN(a, "a");
-        PrintBN(b, "b");
-        PrintBN(x, "x");
-        PrintBN(y, "y");
-        cout << endl;
     //base case
     if(BN_is_zero(a))
     {
-        cout << "return" << endl;
         BN_set_word(x, (unsigned long) 0);
         BN_set_word(y, (unsigned long) 1);
-        PrintBN(x, "x");
-        PrintBN(y, "y");
-        PrintBN(b, "b");
         cout << endl;
         return BN_dup(b);
     }
@@ -221,35 +201,15 @@ BIGNUM* rsaCrypto::extGCD(BIGNUM *a, BIGNUM *b, BIGNUM *x, BIGNUM *y)
     BN_mod(tmp, b, a, ctx);
     BIGNUM *gcd = extGCD(tmp, a, x1, y1);
 
-    PrintBN(gcd, "gcd");
-    PrintBN(b, "b");
-    PrintBN(gcd, "gcd");
-    PrintBN(a, "a");
-    PrintBN(gcd, "gcd");
-    PrintBN(x1, "x1");
-    PrintBN(gcd, "gcd");
-    PrintBN(y1, "y1");
-    PrintBN(gcd, "gcd");
-    cout << endl;
     //x = y1 - (b/a)*x1;
     BN_div(tmp, x, b, a, ctx);
-    PrintBN(tmp, "b/a");
-    PrintBN(gcd, "gcd");
-    PrintBN(x, "x");
-    PrintBN(gcd, "gcd");
-    PrintBN(b, "b");
-    PrintBN(gcd, "gcd");
-    PrintBN(a, "a");
-    PrintBN(gcd, "gcd");
     BN_mul(x1, tmp, x1, ctx);
-    PrintBN(tmp, "b/a*x1");
-    PrintBN(gcd, "gcd");
     BN_sub(x, y1, tmp);
-    PrintBN(tmp, "y1 - (b/a)*x1");
-    PrintBN(gcd, "gcd");
     //y = x1;
     y = x1;
 
+    PrintBN(x, "return x");
+    PrintBN(y, "return y");
     PrintBN(gcd, "return gcd");
     cout << endl;
     return gcd;
@@ -310,37 +270,40 @@ BIGNUM* rsaCrypto::GCD(BIGNUM *a, BIGNUM *b)
 
 void rsaCrypto::ModInverse()
 {
-    //a = e, m = phi
-    x = BN_new();
-    y = BN_new();
-    BIGNUM *g = BN_new();
-    g = extGCD(e, phi, x, y);
-        PrintBN(x, "x");
-        PrintBN(y, "y");
-    if(!BN_is_one(g))
+    BIGNUM *a = BN_dup(e);
+    BIGNUM *m = BN_dup(phi);
+    BIGNUM *x = BN_new();
+    BIGNUM *y = BN_new();
+    BIGNUM *one = BN_new();
+    BIGNUM *zero = BN_new();
+    BN_set_word(x, (unsigned long) 1);
+    BN_zero(y);
+    BN_zero(zero);
+    BN_one(one);
+
+    BIGNUM *q = BN_new();
+    BIGNUM *t = BN_new();
+
+    while(BN_cmp(a, one) == 1)
     {
-        cout << endl;
-        PrintBN(g, "g");
-        cout << endl;
-        cout << "Inverse not found" << endl;
-        return;
+        BN_div(q, NULL, a, m, ctx);
+        t = BN_dup(m);
+        BN_mod(m, a, m, ctx);
+        a = BN_dup(t);
+        t = BN_dup(y);
+
+        BN_mul(q, q, y, ctx);
+        BN_sub(y, x, q);
+        x = BN_dup(t);
     }
-    else
-    {
-        PrintBN(phi, "phi");
-        //d = (x%phi + phi)%phi 
-        BN_mod(x, x, phi, ctx);
-        PrintBN(x, "this will be d");
+
+    if(BN_cmp(x, zero)== -1)
         BN_add(x, x, phi);
-        PrintBN(x, "this will be d");
-        BN_mod(x, x, phi, ctx); 
-        PrintBN(x, "this will be d");
-        cout << endl;
-    }
+    d = BN_dup(x);
 }
 
 void rsaCrypto::PrintBN(BIGNUM *val, string text)
 {
-    cout << endl << text << ": ";
-    BN_print_fp(stdout, val);
+    cout << text << ": ";
+    cout << BN_bn2dec(val) << endl;
 }
