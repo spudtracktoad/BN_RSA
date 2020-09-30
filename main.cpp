@@ -25,7 +25,7 @@ int main()
             cout << "encrypt command" << endl;
             cout << "Name of file to encrypt? ";
             cin >> encryptFileName;
-            encrypter->encrypt(encryptFileName);
+            //encrypter->encrypt(encryptFileName);
 
         }
         else if(command == "decrypt")
@@ -33,7 +33,7 @@ int main()
             cout << "decrypt command" << endl;
             cout << "Name of file to decrypt? ";
             cin >> decryptFileName;
-            encrypter->decrypt(decryptFileName);
+            //encrypter->decrypt(decryptFileName);
         }
         else
         {
