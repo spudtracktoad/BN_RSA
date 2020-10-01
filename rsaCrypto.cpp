@@ -48,7 +48,7 @@ rsaCrypto::rsaCrypto()
 
     ModInverse();
 
-    PrintState();
+    //PrintState();
 }
 void rsaCrypto::PrintState()
 {
@@ -65,78 +65,85 @@ rsaCrypto::~rsaCrypto()
     //dtor
 }
 
-//void rsaCrypto::encrypt(string inputFileName)
-//{
-//    int input;
-//    BIGNUM enInput;
-//    inFile.open(inputFileName);
-//    outFile.open("encrypted.txt");
-//    //cout << "encrypt" << endl;
-//    if(outFile.is_open())
-//    {
-//        if(inFile.is_open())
-//        {
-//            //cout << "File is open" << endl;
-//            do
-//            {
-//                //inFile.read(inBuffer, sizeof(int));
-//                inFile >> input;
-//                //cout << input << endl;
-//                enInput = this->encrypt(input);
-//                //cout << enInput << endl;
-//                outFile << enInput << endl;
-//            }while(!inFile.eof());
-//        }
-//        else
-//        {
-//            cout << "file not open" << endl;
-//        }
-//    }
-//    else
-//    {
-//        cout << "output file not open" << endl;
-//    }
-//    inFile.close();
-//    outFile.close();
-//}
-//
-//void rsaCrypto::decrypt(string inputFileName)
-//{
-//    int deInput;
-//    BIGNUM input;
-//    this->encrypt(inputFileName);
-//    inFile.open("encrypted.txt");
-//    outFile.open("decrypted.txt");
-//    //cout << "decrypt " << endl;
-//    if(outFile.is_open())
-//    {
-//        if(inFile.is_open())
-//        {
-//            //cout << "File is open" << endl;
-//            do
-//            {
-//                //inFile.read(inBuffer, sizeof(int));
-//                inFile >> input;
-//                //cout << input << endl;
-//                deInput = this->decrypt(input);
-//                //cout << deInput << endl;
-//                if(!inFile.eof())
-//                   outFile << deInput << endl;
-//            }while(!inFile.eof());
-//        }
-//        else
-//        {
-//            cout << "file not open" << endl;
-//        }
-//    }
-//    else
-//    {
-//        cout << "output file not open" << endl;
-//    }
-//    inFile.close();
-//    outFile.close();
-//}
-//
+void rsaCrypto::encrypt(string inputFileName)
+{
+    char input[1000000];
+    BIGNUM *enInput;
+    inFile.open(inputFileName);
+    outFile.open("encrypted.txt");
+    //cout << "encrypt" << endl;
+    if(outFile.is_open())
+    {
+        if(inFile.is_open())
+        {
+            //cout << "File is open" << endl;
+            do
+            {
+                //inFile.read(inBuffer, sizeof(int));
+                inFile >> input;
+                cout << input << endl;
+                BN_dec2bn(&enInput, input);
+                PrintBN(enInput, "enInput");
+                //cout << input << endl;
+                enInput = this->encrypt(enInput);
+                //cout << enInput << endl;
+                PrintBN(enInput, "enInput");
+                outFile << BN_bn2dec(enInput) << endl;
+            }while(!inFile.eof());
+        }
+        else
+        {
+            cout << "file not open" << endl;
+        }
+    }
+    else
+    {
+        cout << "output file not open" << endl;
+    }
+    inFile.close();
+    outFile.close();
+}
+
+void rsaCrypto::decrypt(string inputFileName)
+{
+    char deInput[100000];
+    BIGNUM *input;
+    //this->encrypt(inputFileName);
+    inFile.open("encrypted.txt");
+    outFile.open("decrypted.txt");
+    //cout << "decrypt " << endl;
+    if(outFile.is_open())
+    {
+        if(inFile.is_open())
+        {
+            //cout << "File is open" << endl;
+            do
+            {
+                //inFile.read(inBuffer, sizeof(int));
+                inFile >> deInput;
+                cout << deInput << endl;
+                BN_dec2bn(&input, deInput);
+                PrintBN(input, "enInput");
+                input = this->decrypt(input);
+                char *output = BN_bn2dec(input);
+                cout << output << endl;
+                if(!inFile.eof())
+                   outFile << output << endl;
+            }while(!inFile.eof());
+        }
+        else
+        {
+            cout << "file not open" << endl;
+        }
+    }
+    else
+    {
+        cout << "output file not open" << endl;
+    }
+    inFile.close();
+    outFile.close();
+}
+
 BIGNUM* rsaCrypto::encrypt(BIGNUM *i)
 {
     return modExponent(i, this->e, this->n);
@@ -213,50 +220,6 @@ BIGNUM* rsaCrypto::extGCD(BIGNUM *a, BIGNUM *b, BIGNUM *x, BIGNUM *y)
     PrintBN(gcd, "return gcd");
     cout << endl;
     return gcd;
-}
-
-vector<BIGNUM*> rsaCrypto::extEuclid(BIGNUM *a, BIGNUM *b)
-{
-    static vector<BIGNUM*> result;
-    result.push_back(BN_new());
-    result.push_back(BN_new());
-    result.push_back(BN_new());
-    vector<BIGNUM*> internal;
-    internal.push_back(BN_new());
-    internal.push_back(BN_new());
-    internal.push_back(BN_new());
-    vector<BIGNUM*> tmp;
-    tmp.push_back(BN_new());
-    tmp.push_back(BN_new());
-    tmp.push_back(BN_new());
-    if(BN_is_zero(b) == 1)
-    {
-        result[0] = a;
-        BN_one(result[1]);
-        BN_zero(result[2]);
-    //cout << a << " " << b << " " << 0 << " " << result[0] << " " << result[1] << " " << result[2] << endl;
-        return result;
-    }
-    else
-    {
-        BIGNUM *rm = BN_new();
-        BIGNUM *temp = BN_new();
-        BN_mod(temp, a, b, ctx);
-        internal = extEuclid(b, temp);
-        tmp[0] = internal[0];
-        tmp[1] = internal[2];
-        BN_div(temp, rm, a, b, ctx); // a/b
-        BN_mul(temp, temp, internal[2], ctx); // (a/b) *internal[2]
-        BN_sub(temp, internal[1], temp); //internal[1] - a/b * internal[2];
-        tmp[2] = temp;
-    //cout << a << " " << b << " " << a/b << " " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
-    }
-
-    result[0] = tmp[0];
-    result[1] = tmp[1];
-    result[2] = tmp[2];
-
-    return result;
 }
 
 BIGNUM* rsaCrypto::GCD(BIGNUM *a, BIGNUM *b)

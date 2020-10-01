@@ -1,8 +1,9 @@
 #include <iostream>
+#include <fstream>
+#include <string>
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
-#include <vector>
 
 using namespace std;
 
@@ -13,8 +14,8 @@ class rsaCrypto
         rsaCrypto(unsigned char *primeOne, unsigned char *primeTwo);
         rsaCrypto();
         virtual ~rsaCrypto();
-        //void encrypt(string inputFileName);
-        //void decrypt(string inputFileName);
+        void encrypt(string inputFileName);
+        void decrypt(string inputFileName);
         BIGNUM* encrypt(BIGNUM *i);
         BIGNUM* decrypt(BIGNUM *i);
 
@@ -42,9 +43,11 @@ class rsaCrypto
         BIGNUM *d;
         BIGNUM *phi;
         BIGNUM *x, *y;
+        ofstream outFile;
+        ifstream inFile;
         BIGNUM* GCD(BIGNUM *a, BIGNUM *b);
         BIGNUM* extGCD(BIGNUM *a, BIGNUM *m, BIGNUM *x, BIGNUM *y);
-        vector<BIGNUM*> extEuclid(BIGNUM *a, BIGNUM *b);
+        //vector<BIGNUM*> extEuclid(BIGNUM *a, BIGNUM *b);
         BIGNUM* modExponent(BIGNUM *base, BIGNUM *exponent, BIGNUM *mod);
         void PrintBN(BIGNUM *val, string text);
         void PrintState();
