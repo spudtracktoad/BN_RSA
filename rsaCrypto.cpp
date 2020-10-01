@@ -50,6 +50,7 @@ rsaCrypto::rsaCrypto()
 
     //PrintState();
 }
+
 void rsaCrypto::PrintState()
 {
     PrintBN(p, "p");
@@ -60,6 +61,7 @@ void rsaCrypto::PrintState()
     PrintBN(d, "d");
 
 }
+
 rsaCrypto::~rsaCrypto()
 {
     //dtor
@@ -83,11 +85,11 @@ void rsaCrypto::encrypt(string inputFileName)
                 inFile >> input;
                 cout << input << endl;
                 BN_dec2bn(&enInput, input);
-                PrintBN(enInput, "enInput");
+                //PrintBN(enInput, "enInput");
                 //cout << input << endl;
                 enInput = this->encrypt(enInput);
                 //cout << enInput << endl;
-                PrintBN(enInput, "enInput");
+                //PrintBN(enInput, "enInput");
                 outFile << BN_bn2dec(enInput) << endl;
             }while(!inFile.eof());
         }
@@ -123,7 +125,7 @@ void rsaCrypto::decrypt(string inputFileName)
                 inFile >> deInput;
                 cout << deInput << endl;
                 BN_dec2bn(&input, deInput);
-                PrintBN(input, "enInput");
+                //PrintBN(input, "enInput");
                 input = this->decrypt(input);
                 char *output = BN_bn2dec(input);
                 cout << output << endl;
